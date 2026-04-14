@@ -20,10 +20,10 @@ tasks:
     desc: Run tests with coverage
     ignore_error: true
 
-  test-100:
+  test-1000:
     cmds:
-      - go test --count=100 -failfast ./...
-    desc: Run tests 100 times to catch flakiness
+      - go test --count=1000 -failfast ./...
+    desc: Run tests 1000 times to catch flakiness
 
   vuln:
     cmds:

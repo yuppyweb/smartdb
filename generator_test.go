@@ -34,9 +34,11 @@ func TestGenerator_SavepointName(t *testing.T) {
 }
 
 func TestGenerator_SavepointName_Error(t *testing.T) {
+	t.Parallel()
+
 	expectedErr := errors.New("test error")
 
-	gen := smartdb.NewGenerator(func(b []byte) (int, error) {
+	gen := smartdb.NewGenerator(func([]byte) (int, error) {
 		return 0, expectedErr
 	})
 

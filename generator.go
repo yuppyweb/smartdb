@@ -8,16 +8,19 @@ import (
 )
 
 const (
-	savepointNameRandLen = 4
+	savepointNameRandLen = 8
 )
 
+// Generator generates unique savepoint names for nested transaction management.
+// It uses a combination of timestamp and random bytes to create SQL-compliant names
+// that prevent conflicts in concurrent savepoint creation scenarios.
 type Generator struct {
-	reader func(b []byte) (int, error)
+	reader func([]byte) (int, error)
 }
 
 // NewGenerator creates a new Generator with the specified Reader function for generating random bytes.
 // If the Reader is nil, it defaults to crypto/rand.Read.
-func NewGenerator(reader func(b []byte) (int, error)) *Generator {
+func NewGenerator(reader func([]byte) (int, error)) *Generator {
 	if reader == nil {
 		reader = rand.Read
 	}
@@ -39,7 +42,7 @@ func (g *Generator) SavepointName() (string, error) {
 		return "", fmt.Errorf("failed to generate random bytes: %w", err)
 	}
 
-	randValue := binary.BigEndian.Uint32(randBytes)
+	randValue := binary.BigEndian.Uint64(randBytes)
 
-	return fmt.Sprintf("sp_%x_%x", time.Now().UnixMilli(), randValue), nil
+	return fmt.Sprintf("sp%x%x", time.Now().UnixMicro(), randValue), nil
 }

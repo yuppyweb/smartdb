@@ -3,6 +3,7 @@ package smartdb_test
 import (
 	"context"
 	"errors"
+	"sync"
 	"testing"
 
 	"github.com/yuppyweb/smartdb"
@@ -21,11 +22,15 @@ type mockErrorLog struct {
 }
 
 type mockLogger struct {
+	mu       sync.Mutex
 	debugLog []mockDebugLog
 	errorLog []mockErrorLog
 }
 
 func (m *mockLogger) Debug(ctx context.Context, msg string, args ...any) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+
 	m.debugLog = append(m.debugLog, mockDebugLog{
 		ctx:  ctx,
 		msg:  msg,
@@ -34,6 +39,9 @@ func (m *mockLogger) Debug(ctx context.Context, msg string, args ...any) {
 }
 
 func (m *mockLogger) Error(ctx context.Context, err error, args ...any) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+
 	m.errorLog = append(m.errorLog, mockErrorLog{
 		ctx:  ctx,
 		err:  err,

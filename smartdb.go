@@ -108,7 +108,7 @@ func (s *SmartDB) BeginTx(ctx context.Context, opts *sql.TxOptions) (*sql.Tx, er
 // If a transaction is present in the context, the query is executed within that transaction;
 // otherwise, it is executed directly on the database.
 func (s *SmartDB) ExecContext(ctx context.Context, query string, args ...any) (sql.Result, error) {
-	if tx, ok := txFromContext(ctx); ok {
+	if tx, ok := TxFromContext(ctx); ok {
 		s.log.Debug(ctx, packageName+": executing query in transaction", LogArgs{
 			"query": query,
 			"args":  args,
@@ -151,7 +151,7 @@ func (s *SmartDB) PingContext(ctx context.Context) error {
 // If a transaction is present in the context, the statement is prepared within that transaction;
 // otherwise, it is prepared on the database.
 func (s *SmartDB) PrepareContext(ctx context.Context, query string) (*sql.Stmt, error) {
-	if tx, ok := txFromContext(ctx); ok {
+	if tx, ok := TxFromContext(ctx); ok {
 		s.log.Debug(ctx, packageName+": preparing statement in transaction", LogArgs{
 			"query": query,
 		})
@@ -180,7 +180,7 @@ func (s *SmartDB) PrepareContext(ctx context.Context, query string) (*sql.Stmt, 
 // If a transaction is present in the context, the query is executed within that transaction;
 // otherwise, it is executed directly on the database.
 func (s *SmartDB) QueryContext(ctx context.Context, query string, args ...any) (*sql.Rows, error) {
-	if tx, ok := txFromContext(ctx); ok {
+	if tx, ok := TxFromContext(ctx); ok {
 		s.log.Debug(ctx, packageName+": querying rows in transaction", LogArgs{
 			"query": query,
 			"args":  args,
@@ -211,7 +211,7 @@ func (s *SmartDB) QueryContext(ctx context.Context, query string, args ...any) (
 // If a transaction is present in the context, the query is executed within that transaction;
 // otherwise, it is executed directly on the database.
 func (s *SmartDB) QueryRowContext(ctx context.Context, query string, args ...any) *sql.Row {
-	if tx, ok := txFromContext(ctx); ok {
+	if tx, ok := TxFromContext(ctx); ok {
 		s.log.Debug(ctx, packageName+": querying single row in transaction", LogArgs{
 			"query": query,
 			"args":  args,
@@ -236,7 +236,7 @@ func (s *SmartDB) QueryRowContext(ctx context.Context, query string, args ...any
 // to the savepoint, ensuring all operations ultimately execute against the underlying database
 // transaction while preserving the savepoint hierarchy.
 func (s *SmartDB) BeginContext(ctx context.Context) (context.Context, error) {
-	if tx, ok := txFromContext(ctx); ok {
+	if tx, ok := TxFromContext(ctx); ok {
 		s.log.Debug(ctx, packageName+": beginning nested transaction")
 
 		name, err := s.gen.SavepointName()
@@ -249,13 +249,7 @@ func (s *SmartDB) BeginContext(ctx context.Context) (context.Context, error) {
 			return nil, fmt.Errorf("%w: %w", ErrCreateSavepoint, err)
 		}
 
-		// Maintain baseTx reference for deeper nesting levels to ensure direct access to root transaction
-		ctxTx := &txContext{
-			baseTx: tx.baseTx,
-			execTx: sp,
-		}
-
-		return contextWithTx(ctx, ctxTx), nil
+		return ContextWithTx(ctx, NewTxContext(tx.baseTx, sp)), nil
 	}
 
 	s.log.Debug(ctx, packageName+": beginning top-level transaction")
@@ -265,12 +259,7 @@ func (s *SmartDB) BeginContext(ctx context.Context) (context.Context, error) {
 		return nil, fmt.Errorf("%w: %w", ErrBeginCtxTx, err)
 	}
 
-	ctxTx := &txContext{
-		baseTx: tx,
-		execTx: tx,
-	}
-
-	return contextWithTx(ctx, ctxTx), nil
+	return ContextWithTx(ctx, NewTxContext(tx, tx)), nil
 }
 
 // CommitContext commits the transaction or savepoint associated with the provided context.
@@ -278,7 +267,7 @@ func (s *SmartDB) BeginContext(ctx context.Context) (context.Context, error) {
 func (s *SmartDB) CommitContext(ctx context.Context) error {
 	s.log.Debug(ctx, packageName+": committing transaction")
 
-	tx, ok := txFromContext(ctx)
+	tx, ok := TxFromContext(ctx)
 	if !ok {
 		return ErrNoTxInContext
 	}
@@ -295,7 +284,7 @@ func (s *SmartDB) CommitContext(ctx context.Context) error {
 func (s *SmartDB) RollbackContext(ctx context.Context) error {
 	s.log.Debug(ctx, packageName+": rolling back transaction")
 
-	tx, ok := txFromContext(ctx)
+	tx, ok := TxFromContext(ctx)
 	if !ok {
 		return ErrNoTxInContext
 	}

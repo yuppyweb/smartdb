@@ -209,6 +209,12 @@ func (sp *Savepoint) QueryContext(
 
 // QueryRowContext executes a query within the savepoint that is expected to return at most one row.
 // Returns an error if the savepoint is already committed or rolled back.
+//
+// Note: Unlike other query methods (ExecContext, PrepareContext, QueryContext) which can return
+// an error as the second return value, QueryRowContext cannot return an error because it implements
+// the sql.Row interface which only returns *sql.Row. To signal an error state when the savepoint
+// is already done, this method cancels the provided context. The caller will receive a context
+// cancellation error when attempting to use the returned sql.Row (e.g., during Scan()).
 func (sp *Savepoint) QueryRowContext(ctx context.Context, query string, args ...any) *sql.Row {
 	sp.mu.RLock()
 	defer sp.mu.RUnlock()
@@ -222,6 +228,11 @@ func (sp *Savepoint) QueryRowContext(ctx context.Context, query string, args ...
 	if sp.done.Load() {
 		sp.log.Error(ctx, sp.errSavepointIsDone())
 
+		// Return a sql.Row that will fail with context cancellation error.
+		// This is necessary because the Tx interface's QueryRowContext method signature
+		// does not allow returning an error. The cancelled context ensures that any
+		// attempt to use the returned sql.Row (e.g., calling Scan()) will fail with
+		// a context.Canceled error, alerting the caller to the savepoint's invalid state.
 		var cancel context.CancelFunc
 
 		ctx, cancel = context.WithCancel(ctx)

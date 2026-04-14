@@ -131,6 +131,13 @@ linters:
           - err113
           - cyclop
           - funlen
+          - containedctx
+          - goconst
+          - gocognit
+          - nilnil
+          - gochecknoglobals
+          - sqlclosecheck
+          - rowserrcheck
         path: _test.go
     paths:
       - third_party

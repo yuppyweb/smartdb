@@ -12,16 +12,6 @@ import (
 	"github.com/yuppyweb/smartdb"
 )
 
-type mockSavepointSQLResult struct{}
-
-func (m *mockSavepointSQLResult) LastInsertId() (int64, error) {
-	return 0, nil
-}
-
-func (m *mockSavepointSQLResult) RowsAffected() (int64, error) {
-	return 0, nil
-}
-
 func TestNewSavepoint_EmptyName(t *testing.T) {
 	t.Parallel()
 
@@ -92,7 +82,11 @@ func TestNewSavepoint_LongName(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 
-			ctx := context.WithValue(context.Background(), &mockTxContextKey{}, "new-test-long-name")
+			ctx := context.WithValue(
+				context.Background(),
+				&mockTxContextKey{},
+				"new-test-long-name",
+			)
 			log := new(mockLogger)
 
 			sp, err := smartdb.NewSavepoint(ctx, tc.spName, nil, log)
@@ -113,7 +107,9 @@ func TestNewSavepoint_LongName(t *testing.T) {
 			}
 
 			if log.debugLog[0].ctx != ctx {
-				t.Errorf("expected log context to be the same as input context, got different context")
+				t.Errorf(
+					"expected log context to be the same as input context, got different context",
+				)
 			}
 
 			if log.debugLog[0].msg != "smartdb: creating savepoint" {
@@ -126,7 +122,10 @@ func TestNewSavepoint_LongName(t *testing.T) {
 
 			arg, ok := log.debugLog[0].args[0].(smartdb.LogArgs)
 			if !ok {
-				t.Fatalf("expected log argument to be of type LogArgs, got %T", log.debugLog[0].args[0])
+				t.Fatalf(
+					"expected log argument to be of type LogArgs, got %T",
+					log.debugLog[0].args[0],
+				)
 			}
 
 			if len(arg) != 1 {
@@ -134,7 +133,10 @@ func TestNewSavepoint_LongName(t *testing.T) {
 			}
 
 			if (arg)["savepoint"] != tc.spName {
-				t.Errorf("expected log argument 'savepoint' to be the long name, got %v", (arg)["savepoint"])
+				t.Errorf(
+					"expected log argument 'savepoint' to be the long name, got %v",
+					(arg)["savepoint"],
+				)
 			}
 		})
 	}
@@ -165,7 +167,11 @@ func TestNewSavepoint_NotMatchName(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 
-			ctx := context.WithValue(context.Background(), &mockTxContextKey{}, "new-test-invalid-name")
+			ctx := context.WithValue(
+				context.Background(),
+				&mockTxContextKey{},
+				"new-test-invalid-name",
+			)
 			log := new(mockLogger)
 
 			sp, err := smartdb.NewSavepoint(ctx, tc.spName, nil, log)
@@ -186,7 +192,9 @@ func TestNewSavepoint_NotMatchName(t *testing.T) {
 			}
 
 			if log.debugLog[0].ctx != ctx {
-				t.Errorf("expected log context to be the same as input context, got different context")
+				t.Errorf(
+					"expected log context to be the same as input context, got different context",
+				)
 			}
 
 			if log.debugLog[0].msg != "smartdb: creating savepoint" {
@@ -199,7 +207,10 @@ func TestNewSavepoint_NotMatchName(t *testing.T) {
 
 			arg, ok := log.debugLog[0].args[0].(smartdb.LogArgs)
 			if !ok {
-				t.Fatalf("expected log argument to be of type LogArgs, got %T", log.debugLog[0].args[0])
+				t.Fatalf(
+					"expected log argument to be of type LogArgs, got %T",
+					log.debugLog[0].args[0],
+				)
 			}
 
 			if len(arg) != 1 {
@@ -207,7 +218,10 @@ func TestNewSavepoint_NotMatchName(t *testing.T) {
 			}
 
 			if (arg)["savepoint"] != tc.spName {
-				t.Errorf("expected log argument 'savepoint' to be the invalid name, got %v", (arg)["savepoint"])
+				t.Errorf(
+					"expected log argument 'savepoint' to be the invalid name, got %v",
+					(arg)["savepoint"],
+				)
 			}
 		})
 	}
@@ -258,7 +272,10 @@ func TestNewSavepoint_NilTx(t *testing.T) {
 	}
 
 	if (arg)["savepoint"] != "valid_name1" {
-		t.Errorf("expected log argument 'savepoint' to be 'valid_name1', got %v", (arg)["savepoint"])
+		t.Errorf(
+			"expected log argument 'savepoint' to be 'valid_name1', got %v",
+			(arg)["savepoint"],
+		)
 	}
 }
 
@@ -304,11 +321,16 @@ func TestNewSavepoint_WithLogger(t *testing.T) {
 	}
 
 	if (arg)["savepoint"] != "valid_name2" {
-		t.Errorf("expected log argument 'savepoint' to be 'valid_name2', got %v", (arg)["savepoint"])
+		t.Errorf(
+			"expected log argument 'savepoint' to be 'valid_name2', got %v",
+			(arg)["savepoint"],
+		)
 	}
 
 	if tx.ctx != ctx {
-		t.Errorf("expected transaction context to be the same as input context, got different context")
+		t.Errorf(
+			"expected transaction context to be the same as input context, got different context",
+		)
 	}
 
 	if tx.query != "SAVEPOINT valid_name2" {
@@ -332,7 +354,9 @@ func TestNewSavepoint_WithoutLogger(t *testing.T) {
 	}
 
 	if tx.ctx != ctx {
-		t.Errorf("expected transaction context to be the same as input context, got different context")
+		t.Errorf(
+			"expected transaction context to be the same as input context, got different context",
+		)
 	}
 
 	if tx.query != "SAVEPOINT valid_name3" {
@@ -396,7 +420,10 @@ func TestNewSavepoint_ExecError(t *testing.T) {
 	}
 
 	if (arg)["savepoint"] != "valid_name4" {
-		t.Errorf("expected log argument 'savepoint' to be 'valid_name4', got %v", (arg)["savepoint"])
+		t.Errorf(
+			"expected log argument 'savepoint' to be 'valid_name4', got %v",
+			(arg)["savepoint"],
+		)
 	}
 }
 
@@ -422,11 +449,16 @@ func TestSavepoint_Commit(t *testing.T) {
 	}
 
 	if tx.ctx != ctx {
-		t.Errorf("expected transaction context to be the same as input context, got different context")
+		t.Errorf(
+			"expected transaction context to be the same as input context, got different context",
+		)
 	}
 
 	if tx.query != "RELEASE SAVEPOINT valid_name5" {
-		t.Errorf("expected transaction to execute 'RELEASE SAVEPOINT valid_name5', got '%s'", tx.query)
+		t.Errorf(
+			"expected transaction to execute 'RELEASE SAVEPOINT valid_name5', got '%s'",
+			tx.query,
+		)
 	}
 
 	if len(log.debugLog) != 2 {
@@ -455,7 +487,10 @@ func TestSavepoint_Commit(t *testing.T) {
 	}
 
 	if (arg)["savepoint"] != "valid_name5" {
-		t.Errorf("expected log argument 'savepoint' to be 'valid_name5', got %v", (arg)["savepoint"])
+		t.Errorf(
+			"expected log argument 'savepoint' to be 'valid_name5', got %v",
+			(arg)["savepoint"],
+		)
 	}
 }
 
@@ -496,11 +531,16 @@ func TestSavepoint_Commit_ExecError(t *testing.T) {
 	}
 
 	if tx.ctx != ctx {
-		t.Errorf("expected transaction context to be the same as input context, got different context")
+		t.Errorf(
+			"expected transaction context to be the same as input context, got different context",
+		)
 	}
 
 	if tx.query != "RELEASE SAVEPOINT valid_name6" {
-		t.Errorf("expected transaction to execute 'RELEASE SAVEPOINT valid_name6', got '%s'", tx.query)
+		t.Errorf(
+			"expected transaction to execute 'RELEASE SAVEPOINT valid_name6', got '%s'",
+			tx.query,
+		)
 	}
 
 	if len(log.debugLog) != 2 {
@@ -529,7 +569,10 @@ func TestSavepoint_Commit_ExecError(t *testing.T) {
 	}
 
 	if (arg)["savepoint"] != "valid_name6" {
-		t.Errorf("expected log argument 'savepoint' to be 'valid_name6', got %v", (arg)["savepoint"])
+		t.Errorf(
+			"expected log argument 'savepoint' to be 'valid_name6', got %v",
+			(arg)["savepoint"],
+		)
 	}
 }
 
@@ -555,11 +598,16 @@ func TestSavepoint_Commit_AfterCommit(t *testing.T) {
 	}
 
 	if tx.ctx != ctx {
-		t.Errorf("expected transaction context to be the same as input context, got different context")
+		t.Errorf(
+			"expected transaction context to be the same as input context, got different context",
+		)
 	}
 
 	if tx.query != "RELEASE SAVEPOINT valid_name7" {
-		t.Errorf("expected transaction to execute 'RELEASE SAVEPOINT valid_name7', got '%s'", tx.query)
+		t.Errorf(
+			"expected transaction to execute 'RELEASE SAVEPOINT valid_name7', got '%s'",
+			tx.query,
+		)
 	}
 
 	if len(log.debugLog) != 2 {
@@ -588,7 +636,10 @@ func TestSavepoint_Commit_AfterCommit(t *testing.T) {
 	}
 
 	if (arg)["savepoint"] != "valid_name7" {
-		t.Errorf("expected log argument 'savepoint' to be 'valid_name7', got %v", (arg)["savepoint"])
+		t.Errorf(
+			"expected log argument 'savepoint' to be 'valid_name7', got %v",
+			(arg)["savepoint"],
+		)
 	}
 
 	err = sp.Commit()
@@ -630,14 +681,21 @@ func TestSavepoint_Commit_AfterCommit(t *testing.T) {
 	}
 
 	if (arg)["savepoint"] != "valid_name7" {
-		t.Errorf("expected log argument 'savepoint' to be 'valid_name7', got %v", (arg)["savepoint"])
+		t.Errorf(
+			"expected log argument 'savepoint' to be 'valid_name7', got %v",
+			(arg)["savepoint"],
+		)
 	}
 }
 
 func TestSavepoint_Commit_AfterRollback(t *testing.T) {
 	t.Parallel()
 
-	ctx := context.WithValue(context.Background(), &mockTxContextKey{}, "test-commit-after-rollback")
+	ctx := context.WithValue(
+		context.Background(),
+		&mockTxContextKey{},
+		"test-commit-after-rollback",
+	)
 	log := new(mockLogger)
 	tx := new(mockTx)
 
@@ -656,11 +714,16 @@ func TestSavepoint_Commit_AfterRollback(t *testing.T) {
 	}
 
 	if tx.ctx != ctx {
-		t.Errorf("expected transaction context to be the same as input context, got different context")
+		t.Errorf(
+			"expected transaction context to be the same as input context, got different context",
+		)
 	}
 
 	if tx.query != "ROLLBACK TO SAVEPOINT valid_name8" {
-		t.Errorf("expected transaction to execute 'ROLLBACK TO SAVEPOINT valid_name8', got '%s'", tx.query)
+		t.Errorf(
+			"expected transaction to execute 'ROLLBACK TO SAVEPOINT valid_name8', got '%s'",
+			tx.query,
+		)
 	}
 
 	if len(log.debugLog) != 2 {
@@ -689,7 +752,10 @@ func TestSavepoint_Commit_AfterRollback(t *testing.T) {
 	}
 
 	if (arg)["savepoint"] != "valid_name8" {
-		t.Errorf("expected log argument 'savepoint' to be 'valid_name8', got %v", (arg)["savepoint"])
+		t.Errorf(
+			"expected log argument 'savepoint' to be 'valid_name8', got %v",
+			(arg)["savepoint"],
+		)
 	}
 
 	err = sp.Commit()
@@ -731,7 +797,10 @@ func TestSavepoint_Commit_AfterRollback(t *testing.T) {
 	}
 
 	if (arg)["savepoint"] != "valid_name8" {
-		t.Errorf("expected log argument 'savepoint' to be 'valid_name8', got %v", (arg)["savepoint"])
+		t.Errorf(
+			"expected log argument 'savepoint' to be 'valid_name8', got %v",
+			(arg)["savepoint"],
+		)
 	}
 }
 
@@ -760,16 +829,20 @@ func TestSavepoint_Commit_ConcurrentCommit(t *testing.T) {
 		}()
 	}
 
-	var commitCount int
-	var doneCount int
+	var (
+		commitCount int
+		doneCount   int
+	)
 
 	for range countGoroutines {
 		err := <-errCh
-		if err == nil {
+
+		switch {
+		case err == nil:
 			commitCount++
-		} else if errors.Is(err, smartdb.ErrSavepointIsDone) {
+		case errors.Is(err, smartdb.ErrSavepointIsDone):
 			doneCount++
-		} else {
+		default:
 			t.Errorf("unexpected error committing savepoint: %v", err)
 		}
 	}
@@ -779,14 +852,22 @@ func TestSavepoint_Commit_ConcurrentCommit(t *testing.T) {
 	}
 
 	if doneCount != countGoroutines-1 {
-		t.Errorf("expected %d errors for already done savepoint, got %d", countGoroutines-1, doneCount)
+		t.Errorf(
+			"expected %d errors for already done savepoint, got %d",
+			countGoroutines-1,
+			doneCount,
+		)
 	}
 }
 
 func TestSavepoint_ExecContext(t *testing.T) {
 	t.Parallel()
 
-	ctx := context.WithValue(context.Background(), &mockTxContextKey{}, "test-savepoint-exec-context")
+	ctx := context.WithValue(
+		context.Background(),
+		&mockTxContextKey{},
+		"test-savepoint-exec-context",
+	)
 	log := new(mockLogger)
 	tx := new(mockTx)
 
@@ -799,7 +880,7 @@ func TestSavepoint_ExecContext(t *testing.T) {
 		t.Fatalf("expected non-nil savepoint, got nil")
 	}
 
-	mockResult := new(mockSavepointSQLResult)
+	mockResult := new(mockSQLResult)
 	tx.result = mockResult
 
 	result, err := sp.ExecContext(ctx, "SELECT 1", 5, "arg")
@@ -812,7 +893,9 @@ func TestSavepoint_ExecContext(t *testing.T) {
 	}
 
 	if tx.ctx != ctx {
-		t.Errorf("expected transaction context to be the same as input context, got different context")
+		t.Errorf(
+			"expected transaction context to be the same as input context, got different context",
+		)
 	}
 
 	if tx.query != "SELECT 1" {
@@ -849,7 +932,10 @@ func TestSavepoint_ExecContext(t *testing.T) {
 
 	arg, ok := log.debugLog[1].args[0].(smartdb.LogArgs)
 	if !ok {
-		t.Fatalf("expected first log argument to be of type LogArgs, got %T", log.debugLog[1].args[0])
+		t.Fatalf(
+			"expected first log argument to be of type LogArgs, got %T",
+			log.debugLog[1].args[0],
+		)
 	}
 
 	if len(arg) != 3 {
@@ -857,7 +943,10 @@ func TestSavepoint_ExecContext(t *testing.T) {
 	}
 
 	if (arg)["savepoint"] != "valid_name10" {
-		t.Errorf("expected log argument 'savepoint' to be 'valid_name10', got %v", (arg)["savepoint"])
+		t.Errorf(
+			"expected log argument 'savepoint' to be 'valid_name10', got %v",
+			(arg)["savepoint"],
+		)
 	}
 
 	if (arg)["query"] != "SELECT 1" {
@@ -906,7 +995,9 @@ func TestSavepoint_ExecContext_ExecError(t *testing.T) {
 	}
 
 	if tx.ctx != ctx {
-		t.Errorf("expected transaction context to be the same as input context, got different context")
+		t.Errorf(
+			"expected transaction context to be the same as input context, got different context",
+		)
 	}
 
 	if tx.query != "SELECT 1" {
@@ -943,7 +1034,10 @@ func TestSavepoint_ExecContext_ExecError(t *testing.T) {
 
 	arg, ok := log.debugLog[1].args[0].(smartdb.LogArgs)
 	if !ok {
-		t.Fatalf("expected first log argument to be of type LogArgs, got %T", log.debugLog[1].args[0])
+		t.Fatalf(
+			"expected first log argument to be of type LogArgs, got %T",
+			log.debugLog[1].args[0],
+		)
 	}
 
 	if len(arg) != 3 {
@@ -951,7 +1045,10 @@ func TestSavepoint_ExecContext_ExecError(t *testing.T) {
 	}
 
 	if (arg)["savepoint"] != "valid_name11" {
-		t.Errorf("expected log argument 'savepoint' to be 'valid_name11', got %v", (arg)["savepoint"])
+		t.Errorf(
+			"expected log argument 'savepoint' to be 'valid_name11', got %v",
+			(arg)["savepoint"],
+		)
 	}
 
 	if (arg)["query"] != "SELECT 1" {
@@ -966,7 +1063,11 @@ func TestSavepoint_ExecContext_ExecError(t *testing.T) {
 func TestSavepoint_ExecContext_AfterCommit(t *testing.T) {
 	t.Parallel()
 
-	ctx := context.WithValue(context.Background(), &mockTxContextKey{}, "test-savepoint-exec-after-commit")
+	ctx := context.WithValue(
+		context.Background(),
+		&mockTxContextKey{},
+		"test-savepoint-exec-after-commit",
+	)
 	log := new(mockLogger)
 	tx := new(mockTx)
 
@@ -1015,7 +1116,10 @@ func TestSavepoint_ExecContext_AfterCommit(t *testing.T) {
 
 	arg, ok := log.debugLog[2].args[0].(smartdb.LogArgs)
 	if !ok {
-		t.Fatalf("expected first log argument to be of type LogArgs, got %T", log.debugLog[2].args[0])
+		t.Fatalf(
+			"expected first log argument to be of type LogArgs, got %T",
+			log.debugLog[2].args[0],
+		)
 	}
 
 	if len(arg) != 3 {
@@ -1023,7 +1127,10 @@ func TestSavepoint_ExecContext_AfterCommit(t *testing.T) {
 	}
 
 	if (arg)["savepoint"] != "valid_name12" {
-		t.Errorf("expected log argument 'savepoint' to be 'valid_name12', got %v", (arg)["savepoint"])
+		t.Errorf(
+			"expected log argument 'savepoint' to be 'valid_name12', got %v",
+			(arg)["savepoint"],
+		)
 	}
 
 	if (arg)["query"] != "SELECT 1" {
@@ -1038,7 +1145,11 @@ func TestSavepoint_ExecContext_AfterCommit(t *testing.T) {
 func TestSavepoint_ExecContext_AfterRollback(t *testing.T) {
 	t.Parallel()
 
-	ctx := context.WithValue(context.Background(), &mockTxContextKey{}, "test-savepoint-exec-after-rollback")
+	ctx := context.WithValue(
+		context.Background(),
+		&mockTxContextKey{},
+		"test-savepoint-exec-after-rollback",
+	)
 	log := new(mockLogger)
 	tx := new(mockTx)
 
@@ -1087,7 +1198,10 @@ func TestSavepoint_ExecContext_AfterRollback(t *testing.T) {
 
 	arg, ok := log.debugLog[2].args[0].(smartdb.LogArgs)
 	if !ok {
-		t.Fatalf("expected first log argument to be of type LogArgs, got %T", log.debugLog[2].args[0])
+		t.Fatalf(
+			"expected first log argument to be of type LogArgs, got %T",
+			log.debugLog[2].args[0],
+		)
 	}
 
 	if len(arg) != 3 {
@@ -1095,7 +1209,10 @@ func TestSavepoint_ExecContext_AfterRollback(t *testing.T) {
 	}
 
 	if (arg)["savepoint"] != "valid_name13" {
-		t.Errorf("expected log argument 'savepoint' to be 'valid_name13', got %v", (arg)["savepoint"])
+		t.Errorf(
+			"expected log argument 'savepoint' to be 'valid_name13', got %v",
+			(arg)["savepoint"],
+		)
 	}
 
 	if (arg)["query"] != "SELECT 1" {
@@ -1146,16 +1263,20 @@ func TestSavepoint_ExecContext_ConcurrentExec(t *testing.T) {
 
 	wg.Wait()
 
-	var execCount int
-	var doneCount int
+	var (
+		execCount int
+		doneCount int
+	)
 
 	for range countGoroutines {
 		err := <-errCh
-		if err == nil {
+
+		switch {
+		case err == nil:
 			execCount++
-		} else if errors.Is(err, smartdb.ErrSavepointIsDone) {
+		case errors.Is(err, smartdb.ErrSavepointIsDone):
 			doneCount++
-		} else {
+		default:
 			t.Errorf("unexpected error executing query in concurrent exec test: %v", err)
 		}
 	}
@@ -1165,14 +1286,22 @@ func TestSavepoint_ExecContext_ConcurrentExec(t *testing.T) {
 	}
 
 	if doneCount != countGoroutines-breakCount {
-		t.Errorf("expected %d done execs after commit, got %d", countGoroutines-breakCount+1, doneCount)
+		t.Errorf(
+			"expected %d done execs after commit, got %d",
+			countGoroutines-breakCount+1,
+			doneCount,
+		)
 	}
 }
 
 func TestSavepoint_PrepareContext(t *testing.T) {
 	t.Parallel()
 
-	ctx := context.WithValue(context.Background(), &mockTxContextKey{}, "test-savepoint-prepare-context")
+	ctx := context.WithValue(
+		context.Background(),
+		&mockTxContextKey{},
+		"test-savepoint-prepare-context",
+	)
 	log := new(mockLogger)
 	tx := new(mockTx)
 
@@ -1198,7 +1327,9 @@ func TestSavepoint_PrepareContext(t *testing.T) {
 	}
 
 	if tx.ctx != ctx {
-		t.Errorf("expected transaction context to be the same as input context, got different context")
+		t.Errorf(
+			"expected transaction context to be the same as input context, got different context",
+		)
 	}
 
 	if tx.query != "SELECT 1" {
@@ -1223,7 +1354,10 @@ func TestSavepoint_PrepareContext(t *testing.T) {
 
 	arg, ok := log.debugLog[1].args[0].(smartdb.LogArgs)
 	if !ok {
-		t.Fatalf("expected first log argument to be of type LogArgs, got %T", log.debugLog[1].args[0])
+		t.Fatalf(
+			"expected first log argument to be of type LogArgs, got %T",
+			log.debugLog[1].args[0],
+		)
 	}
 
 	if len(arg) != 2 {
@@ -1231,7 +1365,10 @@ func TestSavepoint_PrepareContext(t *testing.T) {
 	}
 
 	if (arg)["savepoint"] != "valid_name15" {
-		t.Errorf("expected log argument 'savepoint' to be 'valid_name15', got %v", (arg)["savepoint"])
+		t.Errorf(
+			"expected log argument 'savepoint' to be 'valid_name15', got %v",
+			(arg)["savepoint"],
+		)
 	}
 
 	if (arg)["query"] != "SELECT 1" {
@@ -1242,7 +1379,11 @@ func TestSavepoint_PrepareContext(t *testing.T) {
 func TestSavepoint_PrepareContext_PrepareError(t *testing.T) {
 	t.Parallel()
 
-	ctx := context.WithValue(context.Background(), &mockTxContextKey{}, "test-savepoint-prepare-error")
+	ctx := context.WithValue(
+		context.Background(),
+		&mockTxContextKey{},
+		"test-savepoint-prepare-error",
+	)
 	log := new(mockLogger)
 	tx := new(mockTx)
 
@@ -1276,7 +1417,9 @@ func TestSavepoint_PrepareContext_PrepareError(t *testing.T) {
 	}
 
 	if tx.ctx != ctx {
-		t.Errorf("expected transaction context to be the same as input context, got different context")
+		t.Errorf(
+			"expected transaction context to be the same as input context, got different context",
+		)
 	}
 
 	if tx.query != "SELECT 1" {
@@ -1301,7 +1444,10 @@ func TestSavepoint_PrepareContext_PrepareError(t *testing.T) {
 
 	arg, ok := log.debugLog[1].args[0].(smartdb.LogArgs)
 	if !ok {
-		t.Fatalf("expected first log argument to be of type LogArgs, got %T", log.debugLog[1].args[0])
+		t.Fatalf(
+			"expected first log argument to be of type LogArgs, got %T",
+			log.debugLog[1].args[0],
+		)
 	}
 
 	if len(arg) != 2 {
@@ -1309,7 +1455,10 @@ func TestSavepoint_PrepareContext_PrepareError(t *testing.T) {
 	}
 
 	if (arg)["savepoint"] != "valid_name16" {
-		t.Errorf("expected log argument 'savepoint' to be 'valid_name16', got %v", (arg)["savepoint"])
+		t.Errorf(
+			"expected log argument 'savepoint' to be 'valid_name16', got %v",
+			(arg)["savepoint"],
+		)
 	}
 
 	if (arg)["query"] != "SELECT 1" {
@@ -1320,7 +1469,11 @@ func TestSavepoint_PrepareContext_PrepareError(t *testing.T) {
 func TestSavepoint_PrepareContext_AfterCommit(t *testing.T) {
 	t.Parallel()
 
-	ctx := context.WithValue(context.Background(), &mockTxContextKey{}, "test-savepoint-prepare-after-commit")
+	ctx := context.WithValue(
+		context.Background(),
+		&mockTxContextKey{},
+		"test-savepoint-prepare-after-commit",
+	)
 	log := new(mockLogger)
 	tx := new(mockTx)
 
@@ -1369,7 +1522,10 @@ func TestSavepoint_PrepareContext_AfterCommit(t *testing.T) {
 
 	arg, ok := log.debugLog[2].args[0].(smartdb.LogArgs)
 	if !ok {
-		t.Fatalf("expected first log argument to be of type LogArgs, got %T", log.debugLog[2].args[0])
+		t.Fatalf(
+			"expected first log argument to be of type LogArgs, got %T",
+			log.debugLog[2].args[0],
+		)
 	}
 
 	if len(arg) != 2 {
@@ -1377,7 +1533,10 @@ func TestSavepoint_PrepareContext_AfterCommit(t *testing.T) {
 	}
 
 	if (arg)["savepoint"] != "valid_name17" {
-		t.Errorf("expected log argument 'savepoint' to be 'valid_name17', got %v", (arg)["savepoint"])
+		t.Errorf(
+			"expected log argument 'savepoint' to be 'valid_name17', got %v",
+			(arg)["savepoint"],
+		)
 	}
 
 	if (arg)["query"] != "SELECT 1" {
@@ -1388,7 +1547,11 @@ func TestSavepoint_PrepareContext_AfterCommit(t *testing.T) {
 func TestSavepoint_PrepareContext_AfterRollback(t *testing.T) {
 	t.Parallel()
 
-	ctx := context.WithValue(context.Background(), &mockTxContextKey{}, "test-savepoint-prepare-after-rollback")
+	ctx := context.WithValue(
+		context.Background(),
+		&mockTxContextKey{},
+		"test-savepoint-prepare-after-rollback",
+	)
 	log := new(mockLogger)
 	tx := new(mockTx)
 
@@ -1437,7 +1600,10 @@ func TestSavepoint_PrepareContext_AfterRollback(t *testing.T) {
 
 	arg, ok := log.debugLog[2].args[0].(smartdb.LogArgs)
 	if !ok {
-		t.Fatalf("expected first log argument to be of type LogArgs, got %T", log.debugLog[2].args[0])
+		t.Fatalf(
+			"expected first log argument to be of type LogArgs, got %T",
+			log.debugLog[2].args[0],
+		)
 	}
 
 	if len(arg) != 2 {
@@ -1445,7 +1611,10 @@ func TestSavepoint_PrepareContext_AfterRollback(t *testing.T) {
 	}
 
 	if (arg)["savepoint"] != "valid_name18" {
-		t.Errorf("expected log argument 'savepoint' to be 'valid_name18', got %v", (arg)["savepoint"])
+		t.Errorf(
+			"expected log argument 'savepoint' to be 'valid_name18', got %v",
+			(arg)["savepoint"],
+		)
 	}
 
 	if (arg)["query"] != "SELECT 1" {
@@ -1480,7 +1649,10 @@ func TestSavepoint_PrepareContext_ConcurrentPrepare(t *testing.T) {
 
 			err := sp.Commit()
 			if err != nil {
-				t.Errorf("unexpected error committing savepoint in concurrent prepare test: %v", err)
+				t.Errorf(
+					"unexpected error committing savepoint in concurrent prepare test: %v",
+					err,
+				)
 			}
 		}
 
@@ -1492,33 +1664,49 @@ func TestSavepoint_PrepareContext_ConcurrentPrepare(t *testing.T) {
 
 	wg.Wait()
 
-	var prepareCount int
-	var doneCount int
+	var (
+		prepareCount int
+		doneCount    int
+	)
 
 	for range countGoroutines {
 		err := <-errCh
-		if err == nil {
+
+		switch {
+		case err == nil:
 			prepareCount++
-		} else if errors.Is(err, smartdb.ErrSavepointIsDone) {
+		case errors.Is(err, smartdb.ErrSavepointIsDone):
 			doneCount++
-		} else {
+		default:
 			t.Errorf("unexpected error preparing statement in concurrent prepare test: %v", err)
 		}
 	}
 
 	if prepareCount != breakCount {
-		t.Errorf("expected %d successful prepares before commit, got %d", breakCount-1, prepareCount)
+		t.Errorf(
+			"expected %d successful prepares before commit, got %d",
+			breakCount-1,
+			prepareCount,
+		)
 	}
 
 	if doneCount != countGoroutines-breakCount {
-		t.Errorf("expected %d done prepares after commit, got %d", countGoroutines-breakCount+1, doneCount)
+		t.Errorf(
+			"expected %d done prepares after commit, got %d",
+			countGoroutines-breakCount+1,
+			doneCount,
+		)
 	}
 }
 
 func TestSavepoint_QueryContext(t *testing.T) {
 	t.Parallel()
 
-	ctx := context.WithValue(context.Background(), &mockTxContextKey{}, "test-savepoint-query-context")
+	ctx := context.WithValue(
+		context.Background(),
+		&mockTxContextKey{},
+		"test-savepoint-query-context",
+	)
 	log := new(mockLogger)
 	tx := new(mockTx)
 
@@ -1544,7 +1732,9 @@ func TestSavepoint_QueryContext(t *testing.T) {
 	}
 
 	if tx.ctx != ctx {
-		t.Errorf("expected transaction context to be the same as input context, got different context")
+		t.Errorf(
+			"expected transaction context to be the same as input context, got different context",
+		)
 	}
 
 	if tx.query != "SELECT 1" {
@@ -1581,7 +1771,10 @@ func TestSavepoint_QueryContext(t *testing.T) {
 
 	arg, ok := log.debugLog[1].args[0].(smartdb.LogArgs)
 	if !ok {
-		t.Fatalf("expected first log argument to be of type LogArgs, got %T", log.debugLog[1].args[0])
+		t.Fatalf(
+			"expected first log argument to be of type LogArgs, got %T",
+			log.debugLog[1].args[0],
+		)
 	}
 
 	if len(arg) != 3 {
@@ -1589,7 +1782,10 @@ func TestSavepoint_QueryContext(t *testing.T) {
 	}
 
 	if (arg)["savepoint"] != "valid_name20" {
-		t.Errorf("expected log argument 'savepoint' to be 'valid_name20', got %v", (arg)["savepoint"])
+		t.Errorf(
+			"expected log argument 'savepoint' to be 'valid_name20', got %v",
+			(arg)["savepoint"],
+		)
 	}
 
 	if (arg)["query"] != "SELECT 1" {
@@ -1604,7 +1800,11 @@ func TestSavepoint_QueryContext(t *testing.T) {
 func TestSavepoint_QueryContext_QueryError(t *testing.T) {
 	t.Parallel()
 
-	ctx := context.WithValue(context.Background(), &mockTxContextKey{}, "test-savepoint-query-error")
+	ctx := context.WithValue(
+		context.Background(),
+		&mockTxContextKey{},
+		"test-savepoint-query-error",
+	)
 	log := new(mockLogger)
 	tx := new(mockTx)
 
@@ -1638,7 +1838,9 @@ func TestSavepoint_QueryContext_QueryError(t *testing.T) {
 	}
 
 	if tx.ctx != ctx {
-		t.Errorf("expected transaction context to be the same as input context, got different context")
+		t.Errorf(
+			"expected transaction context to be the same as input context, got different context",
+		)
 	}
 
 	if tx.query != "SELECT 1" {
@@ -1675,7 +1877,10 @@ func TestSavepoint_QueryContext_QueryError(t *testing.T) {
 
 	arg, ok := log.debugLog[1].args[0].(smartdb.LogArgs)
 	if !ok {
-		t.Fatalf("expected first log argument to be of type LogArgs, got %T", log.debugLog[1].args[0])
+		t.Fatalf(
+			"expected first log argument to be of type LogArgs, got %T",
+			log.debugLog[1].args[0],
+		)
 	}
 
 	if len(arg) != 3 {
@@ -1683,7 +1888,10 @@ func TestSavepoint_QueryContext_QueryError(t *testing.T) {
 	}
 
 	if (arg)["savepoint"] != "valid_name21" {
-		t.Errorf("expected log argument 'savepoint' to be 'valid_name21', got %v", (arg)["savepoint"])
+		t.Errorf(
+			"expected log argument 'savepoint' to be 'valid_name21', got %v",
+			(arg)["savepoint"],
+		)
 	}
 
 	if (arg)["query"] != "SELECT 1" {
@@ -1698,7 +1906,11 @@ func TestSavepoint_QueryContext_QueryError(t *testing.T) {
 func TestSavepoint_QueryContext_AfterCommit(t *testing.T) {
 	t.Parallel()
 
-	ctx := context.WithValue(context.Background(), &mockTxContextKey{}, "test-savepoint-query-after-commit")
+	ctx := context.WithValue(
+		context.Background(),
+		&mockTxContextKey{},
+		"test-savepoint-query-after-commit",
+	)
 	log := new(mockLogger)
 	tx := new(mockTx)
 
@@ -1747,7 +1959,10 @@ func TestSavepoint_QueryContext_AfterCommit(t *testing.T) {
 
 	arg, ok := log.debugLog[2].args[0].(smartdb.LogArgs)
 	if !ok {
-		t.Fatalf("expected first log argument to be of type LogArgs, got %T", log.debugLog[2].args[0])
+		t.Fatalf(
+			"expected first log argument to be of type LogArgs, got %T",
+			log.debugLog[2].args[0],
+		)
 	}
 
 	if len(arg) != 3 {
@@ -1755,7 +1970,10 @@ func TestSavepoint_QueryContext_AfterCommit(t *testing.T) {
 	}
 
 	if (arg)["savepoint"] != "valid_name22" {
-		t.Errorf("expected log argument 'savepoint' to be 'valid_name22', got %v", (arg)["savepoint"])
+		t.Errorf(
+			"expected log argument 'savepoint' to be 'valid_name22', got %v",
+			(arg)["savepoint"],
+		)
 	}
 
 	if (arg)["query"] != "SELECT 1" {
@@ -1770,7 +1988,11 @@ func TestSavepoint_QueryContext_AfterCommit(t *testing.T) {
 func TestSavepoint_QueryContext_AfterRollback(t *testing.T) {
 	t.Parallel()
 
-	ctx := context.WithValue(context.Background(), &mockTxContextKey{}, "test-savepoint-query-after-rollback")
+	ctx := context.WithValue(
+		context.Background(),
+		&mockTxContextKey{},
+		"test-savepoint-query-after-rollback",
+	)
 	log := new(mockLogger)
 	tx := new(mockTx)
 
@@ -1819,7 +2041,10 @@ func TestSavepoint_QueryContext_AfterRollback(t *testing.T) {
 
 	arg, ok := log.debugLog[2].args[0].(smartdb.LogArgs)
 	if !ok {
-		t.Fatalf("expected first log argument to be of type LogArgs, got %T", log.debugLog[2].args[0])
+		t.Fatalf(
+			"expected first log argument to be of type LogArgs, got %T",
+			log.debugLog[2].args[0],
+		)
 	}
 
 	if len(arg) != 3 {
@@ -1827,7 +2052,10 @@ func TestSavepoint_QueryContext_AfterRollback(t *testing.T) {
 	}
 
 	if (arg)["savepoint"] != "valid_name23" {
-		t.Errorf("expected log argument 'savepoint' to be 'valid_name23', got %v", (arg)["savepoint"])
+		t.Errorf(
+			"expected log argument 'savepoint' to be 'valid_name23', got %v",
+			(arg)["savepoint"],
+		)
 	}
 
 	if (arg)["query"] != "SELECT 1" {
@@ -1878,16 +2106,20 @@ func TestSavepoint_QueryContext_ConcurrentQuery(t *testing.T) {
 
 	wg.Wait()
 
-	var queryCount int
-	var doneCount int
+	var (
+		queryCount int
+		doneCount  int
+	)
 
 	for range countGoroutines {
 		err := <-errCh
-		if err == nil {
+
+		switch {
+		case err == nil:
 			queryCount++
-		} else if errors.Is(err, smartdb.ErrSavepointIsDone) {
+		case errors.Is(err, smartdb.ErrSavepointIsDone):
 			doneCount++
-		} else {
+		default:
 			t.Errorf("unexpected error querying in concurrent query test: %v", err)
 		}
 	}
@@ -1897,14 +2129,22 @@ func TestSavepoint_QueryContext_ConcurrentQuery(t *testing.T) {
 	}
 
 	if doneCount != countGoroutines-breakCount {
-		t.Errorf("expected %d done queries after commit, got %d", countGoroutines-breakCount+1, doneCount)
+		t.Errorf(
+			"expected %d done queries after commit, got %d",
+			countGoroutines-breakCount+1,
+			doneCount,
+		)
 	}
 }
 
 func TestSavepoint_QueryRowContext(t *testing.T) {
 	t.Parallel()
 
-	ctx := context.WithValue(context.Background(), &mockTxContextKey{}, "test-savepoint-query-row-context")
+	ctx := context.WithValue(
+		context.Background(),
+		&mockTxContextKey{},
+		"test-savepoint-query-row-context",
+	)
 	log := new(mockLogger)
 	tx := new(mockTx)
 
@@ -1926,7 +2166,9 @@ func TestSavepoint_QueryRowContext(t *testing.T) {
 	}
 
 	if tx.ctx != ctx {
-		t.Errorf("expected transaction context to be the same as input context, got different context")
+		t.Errorf(
+			"expected transaction context to be the same as input context, got different context",
+		)
 	}
 
 	if tx.query != "SELECT 1" {
@@ -1963,7 +2205,10 @@ func TestSavepoint_QueryRowContext(t *testing.T) {
 
 	arg, ok := log.debugLog[1].args[0].(smartdb.LogArgs)
 	if !ok {
-		t.Fatalf("expected first log argument to be of type LogArgs, got %T", log.debugLog[1].args[0])
+		t.Fatalf(
+			"expected first log argument to be of type LogArgs, got %T",
+			log.debugLog[1].args[0],
+		)
 	}
 
 	if len(arg) != 3 {
@@ -1971,7 +2216,10 @@ func TestSavepoint_QueryRowContext(t *testing.T) {
 	}
 
 	if (arg)["savepoint"] != "valid_name25" {
-		t.Errorf("expected log argument 'savepoint' to be 'valid_name25', got %v", (arg)["savepoint"])
+		t.Errorf(
+			"expected log argument 'savepoint' to be 'valid_name25', got %v",
+			(arg)["savepoint"],
+		)
 	}
 
 	if (arg)["query"] != "SELECT 1" {
@@ -1986,7 +2234,11 @@ func TestSavepoint_QueryRowContext(t *testing.T) {
 func TestSavepoint_QueryRowContext_AfterCommit(t *testing.T) {
 	t.Parallel()
 
-	ctx := context.WithValue(context.Background(), &mockTxContextKey{}, "test-savepoint-query-row-after-commit")
+	ctx := context.WithValue(
+		context.Background(),
+		&mockTxContextKey{},
+		"test-savepoint-query-row-after-commit",
+	)
 	log := new(mockLogger)
 	tx := new(mockTx)
 
@@ -2030,7 +2282,10 @@ func TestSavepoint_QueryRowContext_AfterCommit(t *testing.T) {
 
 	arg, ok := log.debugLog[2].args[0].(smartdb.LogArgs)
 	if !ok {
-		t.Fatalf("expected first log argument to be of type LogArgs, got %T", log.debugLog[2].args[0])
+		t.Fatalf(
+			"expected first log argument to be of type LogArgs, got %T",
+			log.debugLog[2].args[0],
+		)
 	}
 
 	if len(arg) != 3 {
@@ -2038,7 +2293,10 @@ func TestSavepoint_QueryRowContext_AfterCommit(t *testing.T) {
 	}
 
 	if (arg)["savepoint"] != "valid_name26" {
-		t.Errorf("expected log argument 'savepoint' to be 'valid_name26', got %v", (arg)["savepoint"])
+		t.Errorf(
+			"expected log argument 'savepoint' to be 'valid_name26', got %v",
+			(arg)["savepoint"],
+		)
 	}
 
 	if (arg)["query"] != "SELECT 1" {
@@ -2053,7 +2311,11 @@ func TestSavepoint_QueryRowContext_AfterCommit(t *testing.T) {
 func TestSavepoint_QueryRowContext_AfterRollback(t *testing.T) {
 	t.Parallel()
 
-	ctx := context.WithValue(context.Background(), &mockTxContextKey{}, "test-savepoint-query-row-after-rollback")
+	ctx := context.WithValue(
+		context.Background(),
+		&mockTxContextKey{},
+		"test-savepoint-query-row-after-rollback",
+	)
 	log := new(mockLogger)
 	tx := new(mockTx)
 
@@ -2097,7 +2359,10 @@ func TestSavepoint_QueryRowContext_AfterRollback(t *testing.T) {
 
 	arg, ok := log.debugLog[2].args[0].(smartdb.LogArgs)
 	if !ok {
-		t.Fatalf("expected first log argument to be of type LogArgs, got %T", log.debugLog[2].args[0])
+		t.Fatalf(
+			"expected first log argument to be of type LogArgs, got %T",
+			log.debugLog[2].args[0],
+		)
 	}
 
 	if len(arg) != 3 {
@@ -2105,7 +2370,10 @@ func TestSavepoint_QueryRowContext_AfterRollback(t *testing.T) {
 	}
 
 	if (arg)["savepoint"] != "valid_name27" {
-		t.Errorf("expected log argument 'savepoint' to be 'valid_name27', got %v", (arg)["savepoint"])
+		t.Errorf(
+			"expected log argument 'savepoint' to be 'valid_name27', got %v",
+			(arg)["savepoint"],
+		)
 	}
 
 	if (arg)["query"] != "SELECT 1" {
@@ -2144,22 +2412,32 @@ func TestSavepoint_QueryRowContext_ConcurrentQuery(t *testing.T) {
 
 			err := sp.Commit()
 			if err != nil {
-				t.Errorf("unexpected error committing savepoint in concurrent query row test: %v", err)
+				t.Errorf(
+					"unexpected error committing savepoint in concurrent query row test: %v",
+					err,
+				)
 			}
 		}
 
 		wg.Go(func() {
-			queryCtx := context.WithValue(ctx, &mockTxContextKey{}, "concurrent-query-row-"+strconv.Itoa(idx))
+			queryCtx := context.WithValue(
+				ctx,
+				&mockTxContextKey{},
+				"concurrent-query-row-"+strconv.Itoa(idx),
+			)
 
 			_ = sp.QueryRowContext(queryCtx, "SELECT 1")
+
 			ctxCh <- tx.ctx
 		})
 	}
 
 	wg.Wait()
 
-	var queryCount int
-	var doneCount int
+	var (
+		queryCount int
+		doneCount  int
+	)
 
 	for range countGoroutines {
 		queryCtx := <-ctxCh
@@ -2177,7 +2455,11 @@ func TestSavepoint_QueryRowContext_ConcurrentQuery(t *testing.T) {
 	}
 
 	if doneCount != countGoroutines-breakCount {
-		t.Errorf("expected %d done query rows after commit, got %d", countGoroutines-breakCount, doneCount)
+		t.Errorf(
+			"expected %d done query rows after commit, got %d",
+			countGoroutines-breakCount,
+			doneCount,
+		)
 	}
 }
 
@@ -2203,7 +2485,9 @@ func TestSavepoint_Rollback(t *testing.T) {
 	}
 
 	if tx.ctx != ctx {
-		t.Errorf("expected transaction context to be the same as input context, got different context")
+		t.Errorf(
+			"expected transaction context to be the same as input context, got different context",
+		)
 	}
 
 	if len(log.debugLog) != 2 {
@@ -2224,7 +2508,10 @@ func TestSavepoint_Rollback(t *testing.T) {
 
 	arg, ok := log.debugLog[1].args[0].(smartdb.LogArgs)
 	if !ok {
-		t.Fatalf("expected first log argument to be of type LogArgs, got %T", log.debugLog[1].args[0])
+		t.Fatalf(
+			"expected first log argument to be of type LogArgs, got %T",
+			log.debugLog[1].args[0],
+		)
 	}
 
 	if len(arg) != 1 {
@@ -2232,14 +2519,21 @@ func TestSavepoint_Rollback(t *testing.T) {
 	}
 
 	if (arg)["savepoint"] != "valid_name29" {
-		t.Errorf("expected log argument 'savepoint' to be 'valid_name29', got %v", (arg)["savepoint"])
+		t.Errorf(
+			"expected log argument 'savepoint' to be 'valid_name29', got %v",
+			(arg)["savepoint"],
+		)
 	}
 }
 
 func TestSavepoint_Rollback_ExecError(t *testing.T) {
 	t.Parallel()
 
-	ctx := context.WithValue(context.Background(), &mockTxContextKey{}, "test-savepoint-rollback-exec-error")
+	ctx := context.WithValue(
+		context.Background(),
+		&mockTxContextKey{},
+		"test-savepoint-rollback-exec-error",
+	)
 	log := new(mockLogger)
 	tx := new(mockTx)
 
@@ -2273,7 +2567,9 @@ func TestSavepoint_Rollback_ExecError(t *testing.T) {
 	}
 
 	if tx.ctx != ctx {
-		t.Errorf("expected transaction context to be the same as input context, got different context")
+		t.Errorf(
+			"expected transaction context to be the same as input context, got different context",
+		)
 	}
 
 	if len(log.debugLog) != 2 {
@@ -2294,7 +2590,10 @@ func TestSavepoint_Rollback_ExecError(t *testing.T) {
 
 	arg, ok := log.debugLog[1].args[0].(smartdb.LogArgs)
 	if !ok {
-		t.Fatalf("expected first log argument to be of type LogArgs, got %T", log.debugLog[1].args[0])
+		t.Fatalf(
+			"expected first log argument to be of type LogArgs, got %T",
+			log.debugLog[1].args[0],
+		)
 	}
 
 	if len(arg) != 1 {
@@ -2302,14 +2601,21 @@ func TestSavepoint_Rollback_ExecError(t *testing.T) {
 	}
 
 	if (arg)["savepoint"] != "valid_name30" {
-		t.Errorf("expected log argument 'savepoint' to be 'valid_name30', got %v", (arg)["savepoint"])
+		t.Errorf(
+			"expected log argument 'savepoint' to be 'valid_name30', got %v",
+			(arg)["savepoint"],
+		)
 	}
 }
 
 func TestSavepoint_Rollback_AfterCommit(t *testing.T) {
 	t.Parallel()
 
-	ctx := context.WithValue(context.Background(), &mockTxContextKey{}, "test-savepoint-rollback-after-commit")
+	ctx := context.WithValue(
+		context.Background(),
+		&mockTxContextKey{},
+		"test-savepoint-rollback-after-commit",
+	)
 	log := new(mockLogger)
 	tx := new(mockTx)
 
@@ -2358,7 +2664,10 @@ func TestSavepoint_Rollback_AfterCommit(t *testing.T) {
 
 	arg, ok := log.debugLog[2].args[0].(smartdb.LogArgs)
 	if !ok {
-		t.Fatalf("expected first log argument to be of type LogArgs, got %T", log.debugLog[2].args[0])
+		t.Fatalf(
+			"expected first log argument to be of type LogArgs, got %T",
+			log.debugLog[2].args[0],
+		)
 	}
 
 	if len(arg) != 1 {
@@ -2366,14 +2675,21 @@ func TestSavepoint_Rollback_AfterCommit(t *testing.T) {
 	}
 
 	if (arg)["savepoint"] != "valid_name31" {
-		t.Errorf("expected log argument 'savepoint' to be 'valid_name31', got %v", (arg)["savepoint"])
+		t.Errorf(
+			"expected log argument 'savepoint' to be 'valid_name31', got %v",
+			(arg)["savepoint"],
+		)
 	}
 }
 
 func TestSavepoint_Rollback_AfterRollback(t *testing.T) {
 	t.Parallel()
 
-	ctx := context.WithValue(context.Background(), &mockTxContextKey{}, "test-savepoint-rollback-after-rollback")
+	ctx := context.WithValue(
+		context.Background(),
+		&mockTxContextKey{},
+		"test-savepoint-rollback-after-rollback",
+	)
 	log := new(mockLogger)
 	tx := new(mockTx)
 
@@ -2422,7 +2738,10 @@ func TestSavepoint_Rollback_AfterRollback(t *testing.T) {
 
 	arg, ok := log.debugLog[2].args[0].(smartdb.LogArgs)
 	if !ok {
-		t.Fatalf("expected first log argument to be of type LogArgs, got %T", log.debugLog[2].args[0])
+		t.Fatalf(
+			"expected first log argument to be of type LogArgs, got %T",
+			log.debugLog[2].args[0],
+		)
 	}
 
 	if len(arg) != 1 {
@@ -2430,7 +2749,10 @@ func TestSavepoint_Rollback_AfterRollback(t *testing.T) {
 	}
 
 	if (arg)["savepoint"] != "valid_name32" {
-		t.Errorf("expected log argument 'savepoint' to be 'valid_name32', got %v", (arg)["savepoint"])
+		t.Errorf(
+			"expected log argument 'savepoint' to be 'valid_name32', got %v",
+			(arg)["savepoint"],
+		)
 	}
 }
 
@@ -2459,16 +2781,20 @@ func TestSavepoint_Rollback_ConcurrentRollback(t *testing.T) {
 		}()
 	}
 
-	var rollbackCount int
-	var doneCount int
+	var (
+		rollbackCount int
+		doneCount     int
+	)
 
 	for range countGoroutines {
 		err := <-errCh
-		if err == nil {
+
+		switch {
+		case err == nil:
 			rollbackCount++
-		} else if errors.Is(err, smartdb.ErrSavepointIsDone) {
+		case errors.Is(err, smartdb.ErrSavepointIsDone):
 			doneCount++
-		} else {
+		default:
 			t.Errorf("unexpected error rolling back in concurrent rollback test: %v", err)
 		}
 	}
@@ -2478,6 +2804,10 @@ func TestSavepoint_Rollback_ConcurrentRollback(t *testing.T) {
 	}
 
 	if doneCount != countGoroutines-1 {
-		t.Errorf("expected %d done rollbacks after first rollback, got %d", countGoroutines-1, doneCount)
+		t.Errorf(
+			"expected %d done rollbacks after first rollback, got %d",
+			countGoroutines-1,
+			doneCount,
+		)
 	}
 }
