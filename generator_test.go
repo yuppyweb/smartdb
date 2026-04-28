@@ -7,6 +7,17 @@ import (
 	"github.com/yuppyweb/smartdb"
 )
 
+type mockGenerator struct {
+	savepointName string
+	err           error
+}
+
+func (m *mockGenerator) SavepointName() (string, error) {
+	return m.savepointName, m.err
+}
+
+var _ smartdb.Generator = (*mockGenerator)(nil)
+
 func TestGenerator_SavepointName(t *testing.T) {
 	t.Parallel()
 
@@ -23,6 +34,10 @@ func TestGenerator_SavepointName(t *testing.T) {
 
 		if _, exists := names[name]; exists {
 			t.Fatalf("duplicate savepoint name generated: %s", name)
+		}
+
+		if len(name) > 32 {
+			t.Fatalf("savepoint name exceeds 32 characters: %s", name)
 		}
 
 		names[name] = struct{}{}

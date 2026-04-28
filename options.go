@@ -6,10 +6,10 @@ import (
 
 // WithGenerator returns an Option that sets a custom generator for SmartDB.
 // If the provided generator is nil, the option does nothing (the default generator is retained).
-func WithGenerator(generator *Generator) Option {
+func WithGenerator(gen Generator) Option {
 	return func(s *SmartDB) {
-		if generator != nil {
-			s.gen = generator
+		if gen != nil {
+			s.gen = gen
 		}
 	}
 }
