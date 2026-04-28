@@ -3,7 +3,7 @@
 [![Go Version](https://img.shields.io/github/go-mod/go-version/yuppyweb/smartdb)](https://github.com/yuppyweb/smartdb)
 [![Go Report Card](https://goreportcard.com/badge/github.com/yuppyweb/smartdb)](https://goreportcard.com/report/github.com/yuppyweb/smartdb)
 [![Downloads](https://img.shields.io/github/downloads/yuppyweb/smartdb/total.svg)](https://github.com/yuppyweb/smartdb/releases)
-[![License: MIT](https://img.shields.io/badge/License-MIT-violet.svg)](https://opensource.org/licenses/MIT)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 
 SmartDB is a Go library for context-based transaction management. It's a decorator for the standard database/sql.DB package that implements context-aware database methods and provides seamless transaction management through Go's context, handling nested transactions automatically using savepoints.
 
@@ -23,13 +23,13 @@ import (
     "database/sql"
     "log"
     
-    _ "github.com/lib/pq"
+    _ "github.com/jackc/pgx/v5/stdlib"
     "github.com/yuppyweb/smartdb"
 )
 
 func main() {
     // Open database connection
-    db, err := sql.Open("postgres", "connection_string")
+    db, err := sql.Open("pgx", "postgres://user:password@localhost:5432/dbname")
     if err != nil {
         log.Fatal(err)
     }
@@ -319,10 +319,10 @@ sdb, err := smartdb.New(db,
 
 SmartDB is fully thread-safe:
 
-- ✓ Uses `sync.RWMutex` for transaction state protection
-- ✓ Atomic operations for flags and counters
-- ✓ Safe concurrent access from multiple goroutines
-- ✓ Proper context passing for cancellation signals
+✓ Uses `sync.RWMutex` for transaction state protection  
+✓ Atomic operations for flags and counters  
+✓ Safe concurrent access from multiple goroutines  
+✓ Proper context passing for cancellation signals  
 
 ```go
 // Safe to use from multiple goroutines

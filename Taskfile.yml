@@ -17,13 +17,18 @@ tasks:
       - go tool cover -html cover.out -o cover.html
       - go tool cover -func cover.out
       - rm cover.out
-    desc: Run tests with coverage
+    desc: Run unit tests with coverage
     ignore_error: true
 
   test-1000:
     cmds:
       - go test --count=1000 -failfast ./...
-    desc: Run tests 1000 times to catch flakiness
+    desc: Run unit tests 1000 times to catch flakiness
+
+  test-pg:
+    cmds: 
+      - go test --count=1 -v -tags=integration ./tests/postgres/...
+    desc: Run database integration tests
 
   vuln:
     cmds:

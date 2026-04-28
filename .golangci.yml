@@ -118,6 +118,13 @@ linters:
               desc: Should be replaced by standard lib errors package
     varnamelen:
       min-name-length: 2
+    ireturn:
+      allow:
+        - anon
+        - error
+        - empty
+        - stdlib
+        - Generator
   exclusions:
     generated: lax
     presets:

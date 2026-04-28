@@ -17,6 +17,7 @@ const packageName = "smartdb"
 // that can occur during database operations, transaction management, and savepoint handling.
 var (
 	ErrDatabaseNil     = errors.New(packageName + ": db cannot be nil")
+	ErrInvalidOption   = errors.New(packageName + ": option cannot be nil")
 	ErrBeginSQLTx      = errors.New(packageName + ": failed to begin SQL transaction")
 	ErrBeginCtxTx      = errors.New(packageName + ": failed to begin transaction in context")
 	ErrExecInTx        = errors.New(packageName + ": failed to exec in transaction")
@@ -63,7 +64,7 @@ type Option func(*SmartDB)
 type SmartDB struct {
 	db     ContextDatabaser
 	txOpts *sql.TxOptions
-	gen    *Generator
+	gen    Generator
 	log    Logger
 }
 
@@ -83,6 +84,10 @@ func New(db ContextDatabaser, opts ...Option) (*SmartDB, error) {
 	}
 
 	for _, opt := range opts {
+		if opt == nil {
+			return nil, ErrInvalidOption
+		}
+
 		opt(smartDB)
 	}
 

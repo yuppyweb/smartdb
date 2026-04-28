@@ -6,7 +6,6 @@ import (
 	"database/sql/driver"
 	"errors"
 	"fmt"
-	"regexp"
 	"sync"
 	"testing"
 
@@ -114,7 +113,7 @@ func TestNewSmartDB_WithOptions(t *testing.T) {
 	t.Parallel()
 
 	mockDB := new(mockContextDatabaser)
-	mockGen := new(smartdb.Generator)
+	mockGen := new(mockGenerator)
 	mockLog := new(mockLogger)
 	txOpts := &sql.TxOptions{
 		Isolation: sql.LevelSerializable,
@@ -159,6 +158,21 @@ func TestNewSmartDB_WithoutLoger(t *testing.T) {
 	_ = smartDB.PingContext(context.Background())
 	_ = smartDB.CommitContext(context.Background())
 	_ = smartDB.RollbackContext(context.Background())
+}
+
+func TestNewSmartDB_WithNilOption(t *testing.T) {
+	t.Parallel()
+
+	mockDB := new(mockContextDatabaser)
+
+	_, err := smartdb.New(mockDB, nil)
+	if err == nil {
+		t.Error("expected error when creating SmartDB with nil option, got nil")
+	}
+
+	if !errors.Is(err, smartdb.ErrInvalidOption) {
+		t.Errorf("expected error %v, got %v", smartdb.ErrInvalidOption, err)
+	}
 }
 
 func TestSmartDB_BeginTx(t *testing.T) {
@@ -1913,6 +1927,7 @@ func TestSmartDB_BeginContext_WithTx(t *testing.T) {
 	t.Parallel()
 
 	mockDB, conn := openMockDBConn(t)
+	gen := new(mockGenerator)
 	log := new(mockLogger)
 	ctx := context.WithValue(
 		context.Background(),
@@ -1920,7 +1935,7 @@ func TestSmartDB_BeginContext_WithTx(t *testing.T) {
 		"test-smartdb-begintx-context-with-existing-tx",
 	)
 
-	smartDB, err := smartdb.New(mockDB, smartdb.WithLogger(log))
+	smartDB, err := smartdb.New(mockDB, smartdb.WithLogger(log), smartdb.WithGenerator(gen))
 	if err != nil {
 		t.Errorf("unexpected error creating SmartDB: %v", err)
 	}
@@ -1935,6 +1950,9 @@ func TestSmartDB_BeginContext_WithTx(t *testing.T) {
 	}
 
 	ctxWithTx := smartdb.ContextWithTx(ctx, smartdb.NewTxContext(sqlTx, new(mockTx)))
+
+	savepointName := "test_savepoint1"
+	gen.savepointName = savepointName
 
 	beginCtx, err := smartDB.BeginContext(ctxWithTx)
 	if err != nil {
@@ -1958,8 +1976,8 @@ func TestSmartDB_BeginContext_WithTx(t *testing.T) {
 		t.Errorf("expected transaction to receive context %v, got %v", ctxWithTx, conn.ctx)
 	}
 
-	if !regexp.MustCompile(`^SAVEPOINT [a-zA-Z_][a-zA-Z0-9_]*$`).MatchString(conn.query) {
-		t.Errorf("expected query to be a SAVEPOINT statement, got '%s'", conn.query)
+	if conn.query != "SAVEPOINT "+savepointName {
+		t.Errorf("expected query to be 'SAVEPOINT %s', got '%s'", savepointName, conn.query)
 	}
 
 	if len(conn.args) != 0 {
@@ -1989,13 +2007,8 @@ func TestSmartDB_BeginContext_WithTx(t *testing.T) {
 func TestSmartDB_BeginContext_WithTxSavepointNameError(t *testing.T) {
 	t.Parallel()
 
-	expectedErr := errors.New("test error")
-	readerFunc := func([]byte) (int, error) {
-		return 0, expectedErr
-	}
-
 	mockDB := new(mockContextDatabaser)
-	gen := smartdb.NewGenerator(readerFunc)
+	gen := new(mockGenerator)
 	log := new(mockLogger)
 	ctx := context.WithValue(
 		context.Background(),
@@ -2015,6 +2028,9 @@ func TestSmartDB_BeginContext_WithTxSavepointNameError(t *testing.T) {
 	sqlTx := new(sql.Tx)
 	mockTx := new(mockTx)
 	ctxWithTx := smartdb.ContextWithTx(ctx, smartdb.NewTxContext(sqlTx, mockTx))
+
+	expectedErr := errors.New("test error")
+	gen.err = expectedErr
 
 	_, err = smartDB.BeginContext(ctxWithTx)
 	if err == nil {
@@ -2057,6 +2073,7 @@ func TestSmartDB_BeginContext_WithTxNewSavepointError(t *testing.T) {
 	expectedErr := errors.New("test error")
 
 	mockDB, conn := openMockDBConn(t)
+	gen := new(mockGenerator)
 	log := new(mockLogger)
 	ctx := context.WithValue(
 		context.Background(),
@@ -2064,7 +2081,7 @@ func TestSmartDB_BeginContext_WithTxNewSavepointError(t *testing.T) {
 		"test-smartdb-begintx-context-with-existing-tx_newsavepoint-error",
 	)
 
-	smartDB, err := smartdb.New(mockDB, smartdb.WithLogger(log))
+	smartDB, err := smartdb.New(mockDB, smartdb.WithLogger(log), smartdb.WithGenerator(gen))
 	if err != nil {
 		t.Errorf("unexpected error creating SmartDB: %v", err)
 	}
@@ -2081,6 +2098,9 @@ func TestSmartDB_BeginContext_WithTxNewSavepointError(t *testing.T) {
 	}
 
 	ctxWithTx := smartdb.ContextWithTx(ctx, smartdb.NewTxContext(sqlTx, new(mockTx)))
+
+	savepointName := "test_savepoint2"
+	gen.savepointName = savepointName
 
 	beginCtx, err := smartDB.BeginContext(ctxWithTx)
 	if err == nil {
@@ -2105,8 +2125,8 @@ func TestSmartDB_BeginContext_WithTxNewSavepointError(t *testing.T) {
 		t.Errorf("expected transaction to receive context %v, got %v", ctxWithTx, conn.ctx)
 	}
 
-	if !regexp.MustCompile(`^SAVEPOINT [a-zA-Z_][a-zA-Z0-9_]*$`).MatchString(conn.query) {
-		t.Errorf("expected query to be a SAVEPOINT statement, got '%s'", conn.query)
+	if conn.query != "SAVEPOINT "+savepointName {
+		t.Errorf("expected query to be 'SAVEPOINT %s', got '%s'", savepointName, conn.query)
 	}
 
 	if len(conn.args) != 0 {
